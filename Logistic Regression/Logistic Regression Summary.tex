@@ -1,0 +1,120 @@
+\documentclass[]{article}
+\usepackage{graphicx,tikz}
+\usepackage{amsmath,amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{boondox-cal}
+
+% From https://tex.stackexchange.com/questions/43335/how-to-write-is-distributed-as-under-a-certain-hypothesis
+\makeatletter
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+	\savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+	\savebox{\mysim}{\hbox{$\sim$}}%
+	\mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+%opening
+\title{(Binary) Logistic Regression Reference Sheet}
+\author{Vincent La}
+
+\begin{document}
+
+\maketitle
+
+\section{Key Terms}
+\begin{itemize}
+	\item \textbf{dichotomous variable} - A variable which takes on one of two values, usually 0 (no/negative) or 1 (yes/positive). \textit{Synonyms: Binary variable}
+	\item \textbf{odds} - The probability that something will happen divided by the probability it will not. For example, if an event has a $\frac{2}{3}$ chance of happening and a $\frac{1}{3}$ chance of not, then its odds of occurring are $\frac{2}{3}/\frac{1}{3} = 2$ or $2:1$.
+	\item \textbf{covariates} - The predictor variables in a regression model. Also referred to as independent variables, regressors, explanatory variables, risk factors (in medical literature), etc...
+\end{itemize}
+
+\section{Goal}
+Suppose we have some binary outcome $Y$, e.g. pass or fail, infected or not infected, and some predictors $X_1, ..., X_n$. The goal of logistic regression is to model the relationship between $X_1, ..., X_k$ and $Y$.
+
+\section{Form of the Logistic Regression Model}
+More formally, this can be described as follows:
+\begin{itemize}
+	\item Data $Y_i$ are Binomial random variables with probability $\pi_i$
+	\item $\pi_i$ is the conditional probability that $Y_i = 1$ given the predictors $X_1, ..., X_n$, i.e. $\pi = \mathbb{P}(Y = 1 | X_1 = x_1, X_2 = x_2, ..., X_n = x_n)$
+	\item The relationship between an individual observation $Y_i$ and its associated predictors is given by:
+		\[\pi_i(x_1, x_2, ..., x_k) = \frac{exp(\beta_0 + \beta_1x_1 + ... + \beta_{n}x_k)}{1 + exp(\beta_0 + \beta_1x_1 + ... + \beta_nx_k)} \]
+	\item The \textbf{logit transformation} is used to describe the previous relationship as a linear combination of the predictors
+		\[
+		logit(\pi) = log(\frac{\pi}{1-\pi}) = \beta_0 + \beta_1x_1 + ... + \beta_2x_2 + ... + \beta_kx_k
+		\]
+\end{itemize}
+
+\section{Logistic Regression as a Generalized Linear Model}
+A generalized linear model is any model which attempts to predict some response as the function of a linear combination of predictors. After applying the logit transformation, logistic regression can be described as a generalized linear model.
+
+\paragraph{link function} A function which transforms a response such that it can be written as a linear combination of predictors
+
+\subsection{Example: Linear Regression}
+The linear regression model is written as
+\[Y = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_kX_k + \epsilon\]
+where $\epsilon_i \distas{iid} N(0, \sigma^2)$. 
+
+\bigskip
+
+In contrast with logistic regression, in linear regression:
+\begin{itemize}
+	\item Data: $Y_i$ are continuous real-valued random variables
+	\item Goal: Predict the value of Y as a linear function of the predictors, i.e.
+	\[\mathbb{E}(Y_i | X_1 = x_1, x_2, ..., x_n) = \beta_0 + \beta_1x_1 + \beta_2x_2 + ... + \beta_kx_k \]
+\end{itemize}
+
+\bigskip
+
+The link function in the case of linear regression is the \textbf{identity function}, which is simply $y = y$ (i.e. the identity function doesn't really do anything).
+
+\subsection{Logistic Regression}
+The logistic regression model is written as
+\[
+logit(\pi) = log(\frac{\pi}{1-\pi}) = \beta_0 + \beta_1x_1 + ... + \beta_2x_2 + ... + \beta_kx_k
+\]
+
+The link function for logistic regression is the logit function, which is the inverse cumulative distribution function of the logistic distribution.
+
+\section{Model Fitting}
+\subsection{Maximum Likelihood Estimation}
+The coefficients of a logistic regression model are found by maximizing the the \textbf{likelihood function}
+\[\Pi^n_{i=1} \pi_i^{Y_i}(1-\pi_i)^{n_i-Y_i}\]
+with respect to $\beta_0, \beta_1, ... \beta_k$.
+
+\subsection{Contrast: Linear Regression}
+In the linear regression model, the best fitting $\beta$ coefficients are the \textbf{ordinary least squares (OLS) estimators} given by minimizing the sum of squared residuals with respect to $\beta$.
+\[
+\begin{aligned}
+SSR
+&= \sum^n_{i=1} \epsilon_i^2 \\
+&= \sum^n_{i=1} (Y_i - \hat{Y_i})^2 \\
+&= \sum^n_{i=1} (Y_i - \hat{\beta_0} - \hat{\beta_1}X_{i1} - ... - \hat{\beta_k}X_{ik})^2
+\end{aligned}\]
+
+For simple linear regression, we can describe the optimal fitting $\beta$ coefficients as
+\[\begin{aligned}
+\hat{\beta_0} &= \bar{y} - \hat{\beta_1}\bar{x} \\
+\hat{\beta_1} &= \frac{\sum^n_{i=1}(x_i - \bar{x})(y_i - \bar{y})}{
+	\sum^n_{i=1}(x_1 - \bar{x})^2}
+\end{aligned}\]
+
+and for multiple regression as
+\[
+\hat{\beta} = (X^TX)^{-1}X^Ty
+\]
+
+However, in logistic regression there is no closed form expression for the best fitting $\beta$ coefficients.
+\section{Hypothesis Testing and Confidence Intervals}
+
+\section{Interpretation of Coefficients}
+
+\pagebreak
+
+%\section*{References}
+%Hosmer, David W., Stanley Lemeshow, and Rodney X. Sturdivant. \textit{Applied Logistic Regression.} 3rd ed. Hoboken, NJ: Wiley, 2013.
+
+%"Lesson 6: Logistic Regression." Lesson 6: Logistic Regression | STAT 504. 2017. Accessed May 29, 2017. https://onlinecourses.science.psu.edu/stat504/node/149. 
+\end{document}
